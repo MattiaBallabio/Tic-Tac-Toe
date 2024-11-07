@@ -1,8 +1,11 @@
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
+#include <random>
 
 using namespace std;
+
+random_device rd;
+mt19937 mt(rd());
 
 const char
   LETTERS[3] = {'O',' ','X'};
@@ -10,12 +13,12 @@ const char
 int
   board[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-int
+const int
   corners[4] = {0, 2, 6, 8},
   other[4] = {1, 3, 5, 7};
 
 //Used for optimization when checking for winning tiles
-int winningPatterns[8][3] {
+const int winningPatterns[8][3] {
     {0, 1, 2},
     {3, 4, 5},
     {6, 7, 8},
@@ -139,6 +142,31 @@ bool canWin(int playerLetter,int &winningSquare) {
 }
 
 //=============================================================================
+// void takeRandomSquare(int squares[])
+//   determines whether a corner or other square needs to be picked
+//
+// Parameters
+//   squares[]      - uses either corners[] or other[]
+//   computerLetter - 1 if player is X, -1 if player is O
+//
+
+void takeRandomSquare(const int squares[], int computerLetter) {
+
+  int choice;
+  do {
+      //uses choice random variable
+      uniform_int_distribution<> dis(0,3);
+      choice = dis(mt);
+
+      //checks if random tile is available
+      if (board[squares[choice]] == 0) {
+        board[squares[choice]] = computerLetter;
+        break;
+      }
+    } while (true);
+}
+
+//=============================================================================
 // void getComputerMove(int computerLetter)
 //   determine next move for the computer and place move on the board
 //
@@ -166,33 +194,13 @@ void getComputerMove(int computerLetter) {
   
   // else if a corner is open, take it
   else if (board[0] == 0 || board[2] == 0 || board[6] == 0 || board[8] == 0) {
-
-    //do while to make sure the program picks an available corner tile
-    do {
-      //uses choice random variable
-      choice = rand() % 4;
-      //checks if random cornern tile is available
-      if (board[corners[choice]] == 0) {
-        board[corners[choice]] = computerLetter;
-        break;
-      }
-    } while (true);
+    takeRandomSquare(corners, computerLetter);
   }
 
   // else take any open square
   else {
-    //do while to make sure the program picks an available remaining tile
-    do {
-      //uses choice random variable
-      choice = rand() % 4;
-      //checks if random remaining tile is available
-      if (board[other[choice]] == 0) {
-        board[other[choice]] = computerLetter;
-        break;
-      }
-    } while (true);
+    takeRandomSquare(other, computerLetter);
   }
-  
 }
 
 //=============================================================================
@@ -217,6 +225,9 @@ void getHumanMove(int humanLetter) {
     int a;
     do {
       cin >> a;
+
+      //TODO: Make sure user can enter q or Q to quit the program
+
       //Making sure it's an existing tile
       if (a >= 0 && a <= 8) break;
       else cout << "Please try again with a value from 0 to 8" << endl;
@@ -248,24 +259,15 @@ int main() {
     humanPlayer,
     computerPlayer,
     choice;
-
-  //Needed to use rand()
-  srand(time(0));
     
   displayBoard();
   
   //Randomly choose X player
-  choice = rand() % 2;
+  uniform_int_distribution<> dis(0,1);
+  humanPlayer = 1 - 2 * dis(mt);
+  computerPlayer = -humanPlayer;
 
-  if (choice) {
-    isHumanTurn = true;
-    humanPlayer = 1;
-    computerPlayer = -1;
-  }
-  else {
-    humanPlayer = -1;
-    computerPlayer = 1;
-  }
+  if (humanPlayer == 1) isHumanTurn = true;
   
   //Loop 9 times at most (9 tiles)
   for (int i = 0; i < 9; i++) {
