@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstdlib>
 #include <random>
 
 using namespace std;
@@ -35,56 +34,28 @@ const int winningPatterns[8][3] {
 //
 
 void displayBoard() {
+  
+  //Clear the screen
+  cout << "\033[2J\033[H"; 
+  
+  cout << "   |   |\n";
+  for (int i = 0; i < 9; ++i) {
+    //Print "O" for -1, "X" for 1, or the cell number for 0
+    if (board[i] == 0) {
+      cout << " " << i;
+    } else {
+      cout << " " << "O X"[board[i] + 1];
+    }
 
-  cout << "\033[2J\033[H"; // clear the screen
-  
-  cout << "   |   |\n"
-          " ";
+    //End of a row
+    if (i % 3 == 2) { 
+      cout << "\n   |   |\n";
+      if (i < 6) cout << "---+---+---\n   |   |\n";
+    } else {
+      cout << " |";
+    }
+  }
 
-  cout << "O0X"[board[0]+1];
-  
-  cout << " | ";
-          
-  cout << "O1X"[board[1]+1];
-  
-  cout << " | ";
-  
-  cout << "O2X"[board[2]+1];
-    
-  cout << "\n"
-          "   |   |\n"
-          "---+---+---\n"
-          "   |   |\n"
-          " ";
-          
-  cout << "O3X"[board[3]+1];
-  
-  cout << " | ";
-          
-  cout << "O4X"[board[4]+1];
-  
-  cout << " | ";
-  
-  cout << "O5X"[board[5]+1];
-  
-  cout << "\n"
-          "   |   |\n"
-          "---+---+---\n"
-          "   |   |\n"
-          " ";
-          
-  cout << "O6X"[board[6]+1];
-  
-  cout << " | ";
-          
-  cout << "O7X"[board[7]+1];
-  
-  cout << " | ";
-  
-  cout << "O8X"[board[8]+1];
-  
-  cout << "\n"
-          "   |   |\n";
 }
 
 //=============================================================================
@@ -142,7 +113,7 @@ bool canWin(int playerLetter,int &winningSquare) {
 }
 
 //=============================================================================
-// void takeRandomSquare(int squares[])
+// void takeRandomSquare(int squares[], int computerLetter)
 //   determines whether a corner or other square needs to be picked
 //
 // Parameters
@@ -154,11 +125,11 @@ void takeRandomSquare(const int squares[], int computerLetter) {
 
   int choice;
   do {
-      //uses choice random variable
+      //Uses choice random variable
       uniform_int_distribution<> dis(0,3);
       choice = dis(mt);
 
-      //checks if random tile is available
+      //Checks if random tile is available
       if (board[squares[choice]] == 0) {
         board[squares[choice]] = computerLetter;
         break;
@@ -169,6 +140,7 @@ void takeRandomSquare(const int squares[], int computerLetter) {
 //=============================================================================
 // void getComputerMove(int computerLetter)
 //   determine next move for the computer and place move on the board
+//   win/block -> center -> corner -> other
 //
 // Parameters
 //   computerLetter - 1 if player is X, -1 if player is O
@@ -179,25 +151,21 @@ void getComputerMove(int computerLetter) {
     winningSquare,
     choice;
 
-  // if computer can win, make the winning move
-  if (canWin(computerLetter,winningSquare)) {
+  //Win the game or block winning move
+  if (canWin(computerLetter,winningSquare) || canWin(-computerLetter,winningSquare)) {
     board[winningSquare] = computerLetter;
   }
-  // else if human can win on the next move, make the blocking move
-  else if (canWin(-computerLetter,winningSquare)) {
-    board[winningSquare] = computerLetter;
-  }
-  // else if center is open, take it
+  //Take corner
   else if (board[4] == 0) {
     board[4] = computerLetter;
   }
   
-  // else if a corner is open, take it
+  //Take corners
   else if (board[0] == 0 || board[2] == 0 || board[6] == 0 || board[8] == 0) {
     takeRandomSquare(corners, computerLetter);
   }
 
-  // else take any open square
+  //Take remaining squares
   else {
     takeRandomSquare(other, computerLetter);
   }
@@ -226,9 +194,7 @@ void getHumanMove(int humanLetter) {
     do {
       cin >> a;
 
-      //TODO: Make sure user can enter q or Q to quit the program
-
-      //Making sure it's an existing tile
+      //Making sure it's an existing tiles
       if (a >= 0 && a <= 8) break;
       else cout << "Please try again with a value from 0 to 8" << endl;
     } while (true);
